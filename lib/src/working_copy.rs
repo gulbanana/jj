@@ -198,6 +198,9 @@ pub struct SnapshotOptions<'a> {
     /// (depending on implementation)
     /// return `SnapshotError::NewFileTooLarge`.
     pub max_new_file_size: u64,
+    /// The line ending style to enforce for text files (if any)
+    // TODO: This should be configurable for different files, possibly using .gitattributes
+    pub line_endings: SnapshotLineEndings,
 }
 
 impl SnapshotOptions<'_> {
@@ -208,12 +211,21 @@ impl SnapshotOptions<'_> {
             fsmonitor_kind: FsmonitorKind::None,
             progress: None,
             max_new_file_size: u64::MAX,
+            line_endings: SnapshotLineEndings::Input,
         }
     }
 }
 
 /// A callback for getting progress updates.
 pub type SnapshotProgress<'a> = dyn Fn(&RepoPath) + 'a + Sync;
+
+#[derive(Default)]
+pub enum SnapshotLineEndings {
+    #[default]
+    Input,
+    LF,
+    CRLF,
+}
 
 /// Stats about a checkout operation on a working copy. All "files" mentioned
 /// below may also be symlinks or materialized conflicts.

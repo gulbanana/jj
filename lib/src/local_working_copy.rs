@@ -740,6 +740,7 @@ impl TreeState {
             fsmonitor_kind,
             progress,
             max_new_file_size,
+            line_endings,
         } = options;
 
         let sparse_matcher = self.sparse_matcher();
