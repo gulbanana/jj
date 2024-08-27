@@ -546,8 +546,9 @@ pub enum TreeStateError {
 }
 
 impl TreeState {
-    pub fn working_copy_path(&self) -> &Path {
-        &self.working_copy_path
+    pub fn working_copy_reader(&self) -> std::rc::Rc<dyn Read> {
+        todo!()
+        //&self.working_copy_path
     }
 
     pub fn current_tree_id(&self) -> &MergedTreeId {

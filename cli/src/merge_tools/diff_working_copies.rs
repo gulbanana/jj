@@ -44,11 +44,11 @@ pub(crate) struct DiffWorkingCopies {
 }
 
 impl DiffWorkingCopies {
-    pub fn left_working_copy_path(&self) -> &Path {
+    pub fn left_working_copy_reader(&self) -> Rc<dyn Read> {
         self.left_tree_state.working_copy_path()
     }
 
-    pub fn right_working_copy_path(&self) -> &Path {
+    pub fn right_working_copy_path(&self) -> Rc<dyn Read> {
         self.right_tree_state.working_copy_path()
     }
 
