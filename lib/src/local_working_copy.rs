@@ -1180,28 +1180,15 @@ impl TreeState {
         &self,
         config: &WatchmanConfig,
     ) -> Result<(watchman::Clock, Option<Vec<PathBuf>>), TreeStateError> {
+        let fsmonitor = watchman::Fsmonitor::init(&self.working_copy_path, config)
+            .await
+            .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
         let previous_clock = self.watchman_clock.clone().map(watchman::Clock::from);
-
-        let tokio_fn = async || {
-            let fsmonitor = watchman::Fsmonitor::init(&self.working_copy_path, config)
-                .await
-                .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
-            fsmonitor
-                .query_changed_files(previous_clock)
-                .await
-                .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))
-        };
-
-        match tokio::runtime::Handle::try_current() {
-            Ok(_handle) => tokio_fn().await,
-            Err(_) => {
-                let runtime = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
-                runtime.block_on(tokio_fn())
-            }
-        }
+        let changed_files = fsmonitor
+            .query_changed_files(previous_clock)
+            .await
+            .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
+        Ok(changed_files)
     }
 
     #[cfg(feature = "watchman")]
@@ -1210,26 +1197,13 @@ impl TreeState {
         &self,
         config: &WatchmanConfig,
     ) -> Result<bool, TreeStateError> {
-        let tokio_fn = async || {
-            let fsmonitor = watchman::Fsmonitor::init(&self.working_copy_path, config)
-                .await
-                .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
-            fsmonitor
-                .is_trigger_registered()
-                .await
-                .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))
-        };
-
-        match tokio::runtime::Handle::try_current() {
-            Ok(_handle) => tokio_fn().await,
-            Err(_) => {
-                let runtime = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
-                runtime.block_on(tokio_fn())
-            }
-        }
+        let fsmonitor = watchman::Fsmonitor::init(&self.working_copy_path, config)
+            .await
+            .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))?;
+        fsmonitor
+            .is_trigger_registered()
+            .await
+            .map_err(|err| TreeStateError::Fsmonitor(Box::new(err)))
     }
 }
 
