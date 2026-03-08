@@ -28,6 +28,7 @@ mod diffedit;
 mod duplicate;
 mod edit;
 mod evolog;
+mod explode;
 mod file;
 mod fix;
 #[cfg(feature = "git")]
@@ -114,6 +115,7 @@ enum Command {
     Edit(edit::EditArgs),
     #[command(alias = "obslog", visible_alias = "evolution-log")]
     Evolog(evolog::EvologArgs),
+    Explode(explode::ExplodeArgs),
     #[command(subcommand)]
     File(file::FileCommand),
     Fix(fix::FixArgs),
@@ -185,6 +187,7 @@ pub async fn run_command(ui: &mut Ui, command_helper: &CommandHelper) -> Result<
         Command::Duplicate(args) => duplicate::cmd_duplicate(ui, command_helper, args).await,
         Command::Edit(args) => edit::cmd_edit(ui, command_helper, args).await,
         Command::Evolog(args) => evolog::cmd_evolog(ui, command_helper, args).await,
+        Command::Explode(args) => explode::cmd_explode(ui, command_helper, args).await,
         Command::File(args) => file::cmd_file(ui, command_helper, args).await,
         Command::Fix(args) => fix::cmd_fix(ui, command_helper, args).await,
         #[cfg(feature = "git")]

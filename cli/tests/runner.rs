@@ -32,6 +32,7 @@ mod test_diffedit_command;
 mod test_duplicate_command;
 mod test_edit_command;
 mod test_evolog_command;
+mod test_explode_command;
 mod test_file_annotate_command;
 mod test_file_chmod_command;
 mod test_file_list_command;
