@@ -34,6 +34,7 @@ use jj_lib::backend::BackendResult;
 use jj_lib::backend::CommitId;
 use jj_lib::commit::Commit;
 use jj_lib::dag_walk;
+use jj_lib::formatter::FormatterExt as _;
 use jj_lib::repo::MutableRepo;
 use jj_lib::repo::Repo as _;
 use jj_lib::revset::RevsetStreamExt as _;
@@ -62,7 +63,6 @@ use crate::command_error::CommandError;
 use crate::command_error::internal_error;
 use crate::command_error::user_error;
 use crate::complete;
-use crate::formatter::FormatterExt as _;
 use crate::templater::TemplateRenderer;
 use crate::ui::Ui;
 

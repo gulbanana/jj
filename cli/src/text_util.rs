@@ -17,11 +17,10 @@ use std::cmp;
 use std::io;
 
 use bstr::ByteSlice as _;
+use jj_lib::formatter::FormatRecorder;
+use jj_lib::formatter::Formatter;
 use unicode_width::UnicodeWidthChar as _;
 use unicode_width::UnicodeWidthStr as _;
-
-use crate::formatter::FormatRecorder;
-use crate::formatter::Formatter;
 
 pub fn complete_newline(s: impl Into<String>) -> String {
     let mut s = s.into();
@@ -557,8 +556,8 @@ mod tests {
     use jj_lib::config::StackedConfig;
 
     use super::*;
-    use crate::formatter::ColorFormatter;
-    use crate::formatter::PlainTextFormatter;
+    use crate::color_formatter::ColorFormatter;
+    use jj_lib::formatter::PlainTextFormatter;
 
     fn format_colored(write: impl FnOnce(&mut dyn Formatter) -> io::Result<()>) -> String {
         let mut config = StackedConfig::empty();
