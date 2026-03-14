@@ -989,8 +989,9 @@ impl WorkspaceCommandEnvironment {
         &self,
         repo: &dyn Repo,
         to_rewrite_expr: &Arc<ResolvedRevsetExpression>,
+        ignore_immutable: bool,
     ) -> Result<Option<CommitId>, CommandError> {
-        let immutable_expression = if self.command.global_args().ignore_immutable {
+        let immutable_expression = if ignore_immutable {
             UserRevsetExpression::root()
         } else {
             self.immutable_expression()
@@ -1898,7 +1899,12 @@ to the current parents may contain changes from multiple commits.
         to_rewrite_expr: &Arc<ResolvedRevsetExpression>,
     ) -> Result<(), CommandError> {
         let repo = self.repo().as_ref();
-        let Some(commit_id) = self.env.find_immutable_commit(repo, to_rewrite_expr)? else {
+        let Some(commit_id) = self.env.find_immutable_commit(
+            repo,
+            to_rewrite_expr,
+            self.env.command.global_args().ignore_immutable,
+        )?
+        else {
             return Ok(());
         };
         let error = if &commit_id == repo.store().root_commit_id() {
@@ -2138,7 +2144,11 @@ to the current parents may contain changes from multiple commits.
             // the unresolvable trunk() issue gets addressed differently, it
             // should be okay to propagate the error.
             let wc_expr = RevsetExpression::commit(wc_commit_id.clone());
-            let is_immutable = match self.env.find_immutable_commit(tx.repo(), &wc_expr) {
+            let is_immutable = match self.env.find_immutable_commit(
+                tx.repo(),
+                &wc_expr,
+                self.env.command.global_args().ignore_immutable,
+            ) {
                 Ok(commit_id) => commit_id.is_some(),
                 Err(CommandError(UserError { error, .. })) => {
                     writeln!(
