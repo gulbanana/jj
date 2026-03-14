@@ -504,7 +504,22 @@ impl CommandHelper {
             env.revset_aliases_map
                 .insert("trunk()", fallback)
                 .expect("valid syntax");
-            env.reload_revset_expressions(ui)?;
+            let mut immutable_heads_diagnostics = RevsetDiagnostics::new();
+            let mut short_prefixes_diagnostics = RevsetDiagnostics::new();
+            env.reload_revset_expressions(
+                &mut immutable_heads_diagnostics,
+                &mut short_prefixes_diagnostics,
+            )?;
+            print_parse_diagnostics(
+                ui,
+                "In `revset-aliases.immutable_heads()`",
+                &immutable_heads_diagnostics,
+            )?;
+            print_parse_diagnostics(
+                ui,
+                "In `revsets.short-prefixes`",
+                &short_prefixes_diagnostics,
+            )?;
         }
         WorkspaceCommandHelper::new(ui, workspace, repo, env, self.is_at_head_operation())
     }
@@ -849,7 +864,22 @@ impl WorkspaceCommandEnvironment {
             short_prefixes_expression: None,
             conflict_marker_style: settings.get("ui.conflict-marker-style")?,
         };
-        env.reload_revset_expressions(ui)?;
+        let mut immutable_heads_diagnostics = RevsetDiagnostics::new();
+        let mut short_prefixes_diagnostics = RevsetDiagnostics::new();
+        env.reload_revset_expressions(
+            &mut immutable_heads_diagnostics,
+            &mut short_prefixes_diagnostics,
+        )?;
+        print_parse_diagnostics(
+            ui,
+            "In `revset-aliases.immutable_heads()`",
+            &immutable_heads_diagnostics,
+        )?;
+        print_parse_diagnostics(
+            ui,
+            "In `revsets.short-prefixes`",
+            &short_prefixes_diagnostics,
+        )?;
         Ok(env)
     }
 
@@ -923,9 +953,15 @@ impl WorkspaceCommandEnvironment {
     }
 
     /// Updates parsed revset expressions.
-    fn reload_revset_expressions(&mut self, ui: &Ui) -> Result<(), CommandError> {
-        self.immutable_heads_expression = self.load_immutable_heads_expression(ui)?;
-        self.short_prefixes_expression = self.load_short_prefixes_expression(ui)?;
+    fn reload_revset_expressions(
+        &mut self,
+        immutable_heads_diagnostics: &mut RevsetDiagnostics,
+        short_prefixes_diagnostics: &mut RevsetDiagnostics,
+    ) -> Result<(), CommandError> {
+        self.immutable_heads_expression =
+            self.load_immutable_heads_expression(immutable_heads_diagnostics)?;
+        self.short_prefixes_expression =
+            self.load_short_prefixes_expression(short_prefixes_diagnostics)?;
         Ok(())
     }
 
@@ -948,21 +984,19 @@ impl WorkspaceCommandEnvironment {
 
     fn load_immutable_heads_expression(
         &self,
-        ui: &Ui,
+        diagnostics: &mut RevsetDiagnostics,
     ) -> Result<Arc<UserRevsetExpression>, CommandError> {
-        let mut diagnostics = RevsetDiagnostics::new();
         let expression = jj_lib::revset_util::parse_immutable_heads_expression(
-            &mut diagnostics,
+            diagnostics,
             &self.revset_parse_context(),
         )
         .map_err(|e| config_error_with_message("Invalid `revset-aliases.immutable_heads()`", e))?;
-        print_parse_diagnostics(ui, "In `revset-aliases.immutable_heads()`", &diagnostics)?;
         Ok(expression)
     }
 
     fn load_short_prefixes_expression(
         &self,
-        ui: &Ui,
+        diagnostics: &mut RevsetDiagnostics,
     ) -> Result<Option<Arc<UserRevsetExpression>>, CommandError> {
         let revset_string = self
             .settings
@@ -972,14 +1006,12 @@ impl WorkspaceCommandEnvironment {
         if revset_string.is_empty() {
             Ok(None)
         } else {
-            let mut diagnostics = RevsetDiagnostics::new();
             let expression = revset::parse(
-                &mut diagnostics,
+                diagnostics,
                 &revset_string,
                 &self.revset_parse_context(),
             )
             .map_err(|err| config_error_with_message("Invalid `revsets.short-prefixes`", err))?;
-            print_parse_diagnostics(ui, "In `revsets.short-prefixes`", &diagnostics)?;
             Ok(Some(expression))
         }
     }
